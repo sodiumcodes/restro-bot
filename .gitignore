@@ -1,0 +1,101 @@
+# ==============================
+# Python
+# ==============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# ==============================
+# Virtual Environment
+# ==============================
+venv/
+env/
+.venv/
+ENV/
+
+# ==============================
+# Environment Variables / Secrets
+# ==============================
+backend/.env
+
+# ==============================
+# IDE / Editor
+# ==============================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ==============================
+# Testing / Coverage
+# ==============================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ==============================
+# Build / Distribution
+# ==============================
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ==============================
+# Logs
+# ==============================
+*.log
+logs/
+
+# ==============================
+# Database
+# ==============================
+*.db
+*.sqlite
+*.sqlite3
+
+# ==============================
+# Jupyter Notebook
+# ==============================
+.ipynb_checkpoints/
+
+# ==============================
+# Alembic
+# ==============================
+# Keep migration scripts tracked.
+# Ignore only temporary generated files.
+alembic/__pycache__/
+
+# ==============================
+# LLM / Machine Learning
+# ==============================
+*.pt
+*.pth
+*.bin
+*.onnx
+*.safetensors
+chroma_db/
+vector_store/
+embeddings_cache/
+
+# ==============================
+# OS Generated Files
+# ==============================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==============================
+# Temporary Files
+# ==============================
+*.tmp
+*.bak
+*.old
+.cache/
+temp/
+tmp/

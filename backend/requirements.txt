@@ -1,0 +1,56 @@
+# -------------------------
+# FastAPI and server
+# -------------------------
+fastapi
+uvicorn[standard]
+python-multipart
+
+# -------------------------
+# ENV
+# -------------------------
+python-dotenv
+
+# -------------------------
+# LLM and orchestration
+# -------------------------
+langgraph
+langchain-core
+langchain-community
+
+langchain-groq
+langchain-openai
+
+# -------------------------
+# Database
+# -------------------------
+sqlalchemy
+psycopg[binary]
+pgvector
+alembic
+
+# -------------------------
+# Configuration and validation
+# -------------------------
+pydantic
+pydantic-settings
+python-dotenv
+PyYAML
+
+# -------------------------
+# Menu ingestion
+# -------------------------
+numpy
+pandas
+openpyxl
+
+# -------------------------
+# Rate limiting
+# -------------------------
+slowapi
+
+# -------------------------
+# Testing
+# -------------------------
+pytest
+pytest-asyncio
+httpx
