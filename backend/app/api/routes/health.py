@@ -8,5 +8,5 @@ router = APIRouter(tags=["Health"])
 async def health_check():
     return {
         "status": "ok",
-        "message": "Cafe Ordering Chatbot API is running"
+        "message": "Cafe Chatbot API is running"
     }
