@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.api.routes import health
-
+from tests import test_router as test, test_db
 
 # Initialize FastAPI application
 app = FastAPI(
@@ -25,7 +25,7 @@ app.add_middleware(
 
 # Register API routers
 app.include_router(health.router)
-
+app.include_router(test.router)
 
 @app.get("/")
 async def root():

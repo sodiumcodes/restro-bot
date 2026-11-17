@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     LOG_LEVEL: str = "INFO"
 
+    DATABASE_URL: str
     # Frontend configuration
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
@@ -28,14 +29,16 @@ class Settings(BaseSettings):
     # Data retention
     RETENTION_DAYS: int = 30
 
+    def __init__(self, **values):
+        super().__init__(**values)
+
     # Pydantic settings configuration
     model_config = SettingsConfigDict(
-        env_file=BASE_DIR / ".env",
+        env_file=BASE_DIR / "backend" / ".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore"
     )
-
 
 # Create one settings instance for the application
 settings = Settings()
