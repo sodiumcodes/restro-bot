@@ -3,8 +3,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.api.routes import health
-from tests import test_router as test, test_db
 
 # Initialize FastAPI application
 app = FastAPI(
@@ -24,8 +22,11 @@ app.add_middleware(
 
 
 # Register API routers
-app.include_router(health.router)
-app.include_router(test.router)
+from app.api.v1 import router
+from tests import test_db
+from app.api.v1.endpoints import health
+app.include_router(router.health_router)
+app.include_router(router.test_router)
 
 @app.get("/")
 async def root():

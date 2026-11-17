@@ -4,7 +4,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.database.connection import get_db
 
-from tests.test_router import router
+from app.api.v1.router import test_router as router
 
 @router.get("/test/db-connection")
 def health_check(db: Session = Depends(get_db)):
