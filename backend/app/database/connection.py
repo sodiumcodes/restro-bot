@@ -18,7 +18,6 @@ SessionLocal = sessionmaker(
 
 # FastAPI dependency: provides a session to an API request.
 def get_db():
-    print(settings.DATABASE_URL)
     db = SessionLocal()
 
     try:
