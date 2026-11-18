@@ -184,9 +184,11 @@ class MenuEmbedding(Base):
     __table_args__ = (
         Index(
             "ix_menu_embeddings_hnsw",
-            "embedding",
+            text("(embedding::halfvec(2048))"),
             postgresql_using="hnsw",
-            postgresql_ops={"embedding": "vector_cosine_ops"},
+            postgresql_ops={
+                "embedding": "halfvec_cosine_ops",
+            },
         ),
     )
 
@@ -207,10 +209,9 @@ class MenuEmbedding(Base):
         nullable=False,
     )
 
-    # Dimension 384 follows the current project specification.
-    # Verify it against the actual embedding model before migration.
+    # Dimension 2048 follows the current project specification.
     embedding: Mapped[list[float]] = mapped_column(
-        Vector(384),
+        Vector(2048),
         nullable=False,
     )
 
