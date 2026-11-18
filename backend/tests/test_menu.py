@@ -13,8 +13,7 @@ from app.services.menu_service import (
 from app.api.v1.router import test_router as router
 
 # crud ops
-@router.get("/test/menu-crud")
-def menu_crud_ops(db: Session = Depends(get_db)) :
+def main(db: Session = Depends(get_db)) :
     test_item = None
 
     try:
@@ -76,3 +75,6 @@ def menu_crud_ops(db: Session = Depends(get_db)) :
 
     finally:
         db.close()
+
+if __name__ == "__main__":
+    main()

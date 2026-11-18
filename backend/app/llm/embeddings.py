@@ -11,7 +11,7 @@ Responsibilities:
 
 import math
 from typing import Sequence
-from langchain_openai import OpenAI
+from openai import OpenAI
 from app.core.config import settings
 
 class EmbeddingError(Exception):
