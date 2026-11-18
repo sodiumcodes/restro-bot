@@ -29,8 +29,13 @@ class Settings(BaseSettings):
     # Data retention
     RETENTION_DAYS: int = 30
 
-    def __init__(self, **values):
-        super().__init__(**values)
+    # Embedding configuration
+    EMBEDDING_PROVIDER: str 
+    EMBEDDING_MODEL: str 
+    EMBEDDING_DIM: int = 2048
+    EMBEDDING_BATCH_SIZE: int = 10
+    OPENROUTER_API_KEY: str
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
 
     # Pydantic settings configuration
     model_config = SettingsConfigDict(
