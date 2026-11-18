@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
-
+from typing import TYPE_CHECKING
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -22,6 +22,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
 
 from app.database.base import Base
+if TYPE_CHECKING:
+    from app.database.models.order import OrderItem
+    from app.database.models.menu import MenuItem, MenuEmbedding
 
 # ============================================================
 # MENU ITEM
