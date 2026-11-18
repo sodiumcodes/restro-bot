@@ -1,3 +1,5 @@
+import hashlib
+import json
 from datetime import datetime, timezone
 from decimal import Decimal
 
@@ -128,3 +130,35 @@ def soft_delete_menu_item(
     db.commit()
 
     return True
+
+
+def build_embedding_text(item: dict) -> str:
+    """
+    Build the semantic text representation of a menu item.
+
+    Keep this function consistent between ingestion
+    and embedding generation.
+    """
+
+    ingredients = ", ".join(item.get("ingredients") or [])
+    allergens = ", ".join(item.get("allergens") or [])
+
+    return (
+        f"Name: {item['name']}\n"
+        f"Description: {item['description']}\n"
+        f"Category: {item['category'] or 'Not specified'}\n"
+        f"Dietary type: {item['veg_type'] or 'Not specified'}\n"
+        f"Spice level: {item['spice_level'] or 'Not specified'}\n"
+        f"Ingredients: {ingredients}\n"
+        f"Allergens: {allergens}"
+    )
+
+
+def calculate_content_hash(item: dict) -> str:
+    """Generate a stable hash of the semantic menu content."""
+
+    content = build_embedding_text(item)
+
+    return hashlib.sha256(
+        content.encode("utf-8")
+    ).hexdigest()
