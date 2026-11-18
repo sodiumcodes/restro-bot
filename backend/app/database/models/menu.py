@@ -31,7 +31,10 @@ class MenuItem(Base):
     __tablename__ = "menu_items"
 
     __table_args__ = (
-        CheckConstraint("price >= 0", name="ck_menu_items_price_nonnegative"),
+        CheckConstraint(
+            "price >= 0",
+            name="ck_menu_items_price_nonnegative"
+        ),
         CheckConstraint(
             "veg_type IN ('veg', 'non-veg', 'vegan', 'egg')",
             name="ck_menu_items_veg_type",
@@ -44,6 +47,14 @@ class MenuItem(Base):
             "prep_time_minutes >= 0",
             name="ck_menu_items_prep_time",
         ),
+
+        # Unique name only among non-deleted menu items.
+        Index(
+            "uq_menu_items_active_name",
+            "name",
+            unique=True,
+            postgresql_where=text("deleted_at IS NULL"),
+        ),
     )
 
     id: Mapped[int] = mapped_column(
@@ -54,7 +65,6 @@ class MenuItem(Base):
 
     name: Mapped[str] = mapped_column(
         Text,
-        unique=True,
         nullable=False,
     )
 
