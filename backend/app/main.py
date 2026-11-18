@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -23,7 +22,7 @@ app.add_middleware(
 
 # Register API routers
 from app.api.v1 import router
-from tests import test_db
+from tests import test_db, test_menu
 from app.api.v1.endpoints import health
 app.include_router(router.health_router)
 app.include_router(router.test_router)
