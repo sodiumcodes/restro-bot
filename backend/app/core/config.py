@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
 
+    # LLM router configuration
+    LLM_MODELS_CONFIG: str = "app/config/llm_models.yaml"
+    LLM_TEMPERATURE: float = 0.0
+    LLM_MAX_RETRIES: int = 2
+    PRIMARY_LLM_PROVIDER: str = "groq"
+    GROQ_API_KEY: str | None = None
     # Pydantic settings configuration
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / "backend" / ".env",

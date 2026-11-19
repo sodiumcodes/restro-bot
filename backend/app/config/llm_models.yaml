@@ -1,0 +1,21 @@
+# Model fallback configuration
+
+models:
+  - provider: groq
+    model: openai/gpt-oss-120b
+    api_key_env: GROQ_API_KEY
+
+  - provider: groq
+    model: openai/gpt-oss-20b
+    api_key_env: GROQ_API_KEY
+
+  - provider: groq
+    model: meta-llama/llama-prompt-guard-2-22m
+    api_key_env: GROQ_API_KEY
+
+  - provider: openrouter
+    model: nvidia/nemotron-3.5-super-vl:free
+    api_key_env: OPENROUTER_API_KEY
+    
+temperature: 0.0
+max_attempts_per_model: 2
