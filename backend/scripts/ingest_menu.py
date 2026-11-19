@@ -43,12 +43,20 @@ MENU_FILE = BASE_DIR / "data" / "menu.xlsx"
 
 VALID_CATEGORIES = {
     "Starters",
+    "Drinks",
     "Soups & Salads",
     "Burgers & Sandwiches",
     "Pizza & Pasta",
     "Main Course",
     "Desserts",
-    "Drinks",
+    "Breakfast & Brunch",
+    "Indian Breads",
+    "Rice & Bowls",
+    "Wraps & Rolls",
+    "Asian Mains",
+    "Sides & Dips",
+    "Milkshakes",
+    "Fresh Juices",
 }
 
 VALID_VEG_TYPES = {
