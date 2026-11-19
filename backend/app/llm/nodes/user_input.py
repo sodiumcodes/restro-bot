@@ -34,13 +34,11 @@ def build_preference_extraction_node(llm):
             else state.get("dietary_preference")
         )
 
-        allergy_status = (
-            result.allergy_status
-            if result.allergy_status is not None
-            else state.get("allergy_status", "unknown")
-        )
+        allergy_status = state.get("allergy_status", "unknown")
 
-        allergens = state.get("allergens", [])
+        if result.allergy_status not in (None, "unknown"):
+            allergy_status = result.allergy_status
+            allergens = state.get("allergens", [])
 
         if result.allergens is not None:
             allergens = result.allergens

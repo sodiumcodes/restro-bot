@@ -14,4 +14,3 @@ class PreferenceExtraction(BaseModel):
     ) = None
 
     allergens: list[str] | None = Field(default=None)
-
