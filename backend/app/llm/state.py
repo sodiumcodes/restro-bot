@@ -1,4 +1,3 @@
-
 from typing import Annotated, Literal, TypedDict
 from langgraph.graph.message import add_messages
 
@@ -8,11 +7,18 @@ DietaryPreference = Literal[
     "egg",
     "no-preference"
 ]
-
 AllergyStatus = Literal[
     "has_allergies",
     "none",
     "unknown"
+]
+Intent = Literal[
+    "recommendation",
+    "menu_question",
+    "general_question",
+    "preference_only",
+    "cart_action",
+    "unclear",
 ]
 
 class AgentState(TypedDict):
@@ -22,6 +28,9 @@ class AgentState(TypedDict):
     # Latest user input
     user_query: str
 
+    # Customer intent
+    intent: Intent
+    
     # User preferences
     dietary_preference: DietaryPreference | None
     allergy_status: AllergyStatus

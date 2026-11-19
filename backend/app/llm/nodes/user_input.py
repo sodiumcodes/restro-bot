@@ -1,72 +1,80 @@
 import json
 from typing import Any, Callable
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from app.llm.models import PreferenceExtraction
+from app.llm.models import UserInputAnalysis
 from app.llm.state import AgentState
 from app.llm.prompts import USER_INPUT_PROMPT, RESPONSE_GENERATION_PROMPT
 
-
 # --------------------------------------------------
-# Preference extraction node
+# User input understanding node
 # --------------------------------------------------
 
-def build_preference_extraction_node(llm):
+def build_user_input_node(llm):
 
-    structured_llm = llm.with_structured_output(PreferenceExtraction)
+    structured_llm = llm.with_structured_output(UserInputAnalysis)
 
-    def extract_preferences(state: AgentState) -> dict[str, Any]:
+    def process_user_input(state: AgentState) -> dict[str, Any]:
 
-        user_query = state.get("user_query", "")
-
-        if not user_query.strip():
+        user_query = state.get("user_query", "").strip()
+        if not user_query:
             return {}
 
+        # Extract intent and preferences from the latest message.
         result = structured_llm.invoke([
             SystemMessage(content=USER_INPUT_PROMPT),
             HumanMessage(content=user_query),
         ])
 
-        # Preserve existing values when the latest message
-        # does not provide new information.
+        # Preserve existing dietary preference unless updated.
         dietary = (
             result.dietary_preference
             if result.dietary_preference is not None
             else state.get("dietary_preference")
         )
 
+        # Preserve existing allergy information unless explicitly updated.
         allergy_status = state.get("allergy_status", "unknown")
+        allergens = state.get("allergens", [])
 
-        if result.allergy_status not in (None, "unknown"):
-            allergy_status = result.allergy_status
-            allergens = state.get("allergens", [])
-
-        if result.allergens is not None:
-            allergens = result.allergens
-
-        # If the customer explicitly says they have no allergies,
-        # clear previously stored allergen information.
-        if allergy_status == "none":
+        if result.allergy_status == "none":
+            allergy_status = "none"
             allergens = []
 
-        # Do not proceed if the customer says they have allergies
-        # but has not specified which ones.
+        elif result.allergy_status == "has_allergies":
+            allergy_status = "has_allergies"
+
+            if result.allergens is not None:
+                allergens = list(
+                    dict.fromkeys(allergens + result.allergens)
+                )
+
+        elif result.allergy_status == "unknown":
+            # Unknown in the latest extraction does not erase
+            # previously collected allergy information.
+            pass
+
+        # Both dietary preference and allergy information
+        # must be known before menu retrieval.
         preferences_complete = (
             dietary is not None
-            and allergy_status != "unknown"
             and (
                 allergy_status == "none"
-                or bool(allergens)
+                or (
+                    allergy_status == "has_allergies"
+                    and bool(allergens)
+                )
             )
         )
 
         return {
+            "intent": result.intent,
             "dietary_preference": dietary,
             "allergy_status": allergy_status,
             "allergens": allergens,
             "preferences_complete": preferences_complete,
         }
 
-    return extract_preferences
+    return process_user_input
 
 
 # --------------------------------------------------
@@ -75,33 +83,40 @@ def build_preference_extraction_node(llm):
 
 def ask_clarification(state: AgentState) -> dict[str, Any]:
 
-    questions = []
-
-    if state.get("dietary_preference") is None:
-        questions.append(
-            "Do you prefer vegetarian, non-vegetarian, egg-based food, or do you have no preference?"
-        )
-
+    dietary = state.get("dietary_preference")
     allergy_status = state.get("allergy_status", "unknown")
     allergens = state.get("allergens", [])
+    intent = state.get("intent", "unclear")
 
-    if allergy_status == "unknown":
-        questions.append(
-            "Do you have any food allergies? "
+    # Ask for dietary preference first.
+    if dietary is None:
+        response = (
+            "Do you prefer vegetarian, non-vegetarian, egg-based food, or do you have no preference?"
         )
-
+    # Ask about allergies next.
+    elif allergy_status == "unknown":
+        response = (
+            "Do you have any food allergies? "
+            "If not, please say none."
+        )
+    # Ask for specific allergens if the customer hasn't named them.
     elif allergy_status == "has_allergies" and not allergens:
-        questions.append(
+        response = (
             "Which specific food allergies should I consider?"
         )
-
-    response = " ".join(questions)
+    # Preferences are complete, but the customer's intent is unclear.
+    elif intent == "unclear":
+        response = (
+            "What would you like help with? "
+            "I can help you explore the menu or find food recommendations."
+        )
+    else:
+        response = "Could you please clarify what you're looking for?"
 
     return {
         "response": response,
         "messages": [AIMessage(content=response)],
     }
-
 
 # --------------------------------------------------
 # Menu retrieval node
@@ -143,34 +158,51 @@ def build_response_generation_node(llm):
 
     def generate_response(state: AgentState) -> dict[str, Any]:
 
-        menu_context = json.dumps(
-            state.get("retrieved_items", []),
-            ensure_ascii=False,
-            default=str,
-        )
+        intent = state.get("intent", "unclear")
 
-        user_query = state.get("user_query", "")
+        # Preference information has been collected.
+        if intent == "preference_only":
+            response_text = (
+                "Thanks for sharing your preferences! "
+                "What would you like to explore from our menu?"
+            )
 
-        response = llm.invoke([
-            SystemMessage(content=RESPONSE_GENERATION_PROMPT),
-            HumanMessage(
-                content=(
-                    f"Customer query:\n{user_query}\n\n"
-                    f"Retrieved menu items:\n{menu_context}\n\n"
-                    f"Dietary preference: "
-                    f"{state.get('dietary_preference')}\n"
-                    f"Allergy status: "
-                    f"{state.get('allergy_status')}\n"
-                    f"Allergens: "
-                    f"{state.get('allergens', [])}"
-                )
-            ),
-        ])
+        # Cart functionality is not connected yet.
+        elif intent == "cart_action":
+            response_text = (
+                "I can help with cart operations once that functionality is available. I haven't made any changes to your cart."
+            )
 
-        response_text = response.content
+        else:
+            menu_context = json.dumps(
+                state.get("retrieved_items", []),
+                ensure_ascii=False,
+                default=str,
+            )
 
-        if not isinstance(response_text, str):
-            response_text = str(response_text)
+            user_query = state.get("user_query", "")
+
+            response = llm.invoke([
+                SystemMessage(content=RESPONSE_GENERATION_PROMPT),
+                HumanMessage(
+                    content=(
+                        f"Customer query:\n{user_query}\n\n"
+                        f"Customer intent: {intent}\n\n"
+                        f"Retrieved menu items:\n{menu_context}\n\n"
+                        f"Dietary preference: "
+                        f"{state.get('dietary_preference')}\n"
+                        f"Allergy status: "
+                        f"{state.get('allergy_status')}\n"
+                        f"Allergens: "
+                        f"{state.get('allergens', [])}"
+                    )
+                ),
+            ])
+
+            response_text = response.content
+
+            if not isinstance(response_text, str):
+                response_text = str(response_text)
 
         return {
             "response": response_text,
