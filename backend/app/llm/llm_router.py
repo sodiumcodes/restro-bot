@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
+
 # --------------------------------------------------
 # Model configuration
 # --------------------------------------------------
@@ -334,7 +335,12 @@ class LLMRouter:
                     f"Error: {exc}"
                 )
 
+                # Stop immediately if the error is not retryable.
+                if not is_limit_error:
+                    raise
+
                 logger.info(
+                    "Rate/token limit reached. "
                     "Switching to the next configured LLM model."
                 )
 
