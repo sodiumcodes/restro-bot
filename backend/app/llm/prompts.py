@@ -1,4 +1,3 @@
-
 USER_INPUT_PROMPT = """
 You are the input understanding component of Cafe Chatbot.
 
