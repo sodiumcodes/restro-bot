@@ -10,7 +10,7 @@ Responsibilities:
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import InMemorySaver
 from app.llm.state import AgentState
-from app.llm.nodes.user_input import (
+from backend.app.llm.nodes.user_input_node import (
     build_user_input_node,
     build_retrieval_node,
     build_response_generation_node,

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.api.v1.router import session_router as router
 from app.database.connection import get_db
 from app.database.models.order import Order
-from app.schemas.session import (
+from app.schemas.session_schema import (
     SessionCreateResponse,
     SessionStatusResponse,
 )
