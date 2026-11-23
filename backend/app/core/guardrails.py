@@ -3,13 +3,13 @@ import re
 from app.core.config import settings
 
 INJECTION_PATTERNS = [
-    r"ignore\s+(all\s+|previous\s+|prior\s+)?instructions",
-    r"reveal\s+(the\s+|your\s+)?system\s+prompt",
-    r"(show|display|print)\s+(your\s+)?prompt",
+    r"ignore\s+(?:all\s+|previous\s+|prior\s+)*instructions",
+    r"reveal\s+(?:the\s+|your\s+)?system\s+prompt",
+    r"(?:show|display|print)\s+(?:your\s+)?prompt",
     r"developer\s+mode",
     r"jailbreak",
     r"you\s+are\s+now\s+a\b",
-    r"disregard\s+(all\s+)?rules",
+    r"disregard\s+(?:all\s+)?rules",
 ]
 
 OFF_TOPIC_PATTERNS = [
