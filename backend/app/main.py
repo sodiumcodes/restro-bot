@@ -88,12 +88,12 @@ app.add_middleware(
 # --------------------------------------------------
 
 from app.api.v1 import router
-from app.api.v1.endpoints import health_endpoint, sessions_endpoint, chat_endpoint, cart_endpoint
+from app.api.v1.endpoints import health_endpoint, sessions_endpoint, chat_endpoint, cart_endpoint, orders_endpoint
 app.include_router(router.health_router)
 app.include_router(router.session_router)
 app.include_router(router.chat_router)
 app.include_router(router.cart_router)
-
+app.include_router(router.order_router)
 
 # --------------------------------------------------
 # Root endpoint
