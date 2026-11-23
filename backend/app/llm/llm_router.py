@@ -197,6 +197,24 @@ def is_rate_limit_or_token_error(exception: Exception) -> bool:
 # LLM execution router
 # --------------------------------------------------
 
+def _log_fallback(from_model: str, to_model: str | None, reason: str) -> None:
+    # Record model fallback without persisting user messages or secrets
+    try:
+        from app.database.connection import SessionLocal
+        from app.database.models.llm_log import LLMFallbackLog
+
+        with SessionLocal() as db:
+            log_record = LLMFallbackLog(
+                from_model=from_model,
+                to_model=to_model,
+                reason=reason[:255] if reason else "Rate/token limit error",
+            )
+            db.add(log_record)
+            db.commit()
+    except Exception as err:
+        logger.warning(f"Could not write LLM fallback log: {err}")
+
+
 class LLMRouter:
     """
     Handles LLM execution with automatic model fallback.
@@ -268,7 +286,7 @@ class LLMRouter:
 
         last_error = None
 
-        for model_config in self.model_configs:
+        for index, model_config in enumerate(self.model_configs):
 
             provider = model_config["provider"]
 
@@ -342,6 +360,17 @@ class LLMRouter:
                 logger.info(
                     "Rate/token limit reached. "
                     "Switching to the next configured LLM model."
+                )
+
+                next_model = (
+                    self.model_configs[index + 1]["model"]
+                    if index + 1 < len(self.model_configs)
+                    else None
+                )
+                _log_fallback(
+                    from_model=model_config["model"],
+                    to_model=next_model,
+                    reason=type(exc).__name__,
                 )
 
                 continue

@@ -7,10 +7,11 @@ Responsibilities:
 """
 
 from uuid import UUID
-from fastapi import Depends, HTTPException, Query
+from fastapi import Depends, HTTPException, Query, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.api.v1.router import session_router as router
+from app.core.rate_limit import session_limiter
 from app.database.connection import get_db
 from app.database.models.order import Order
 from app.schemas.chat_schema import ChatHistoryResponse, ChatMessageResponse
@@ -25,9 +26,11 @@ from app.services.session_service import create_chat_session, get_chat_session
     status_code=201,
 )
 def create_session(
+    request: Request,
     db: Session = Depends(get_db),
 ) -> SessionCreateResponse:
     """Create a new customer chat session."""
+    session_limiter.check(request)
 
     chat_session = create_chat_session(db)
 
