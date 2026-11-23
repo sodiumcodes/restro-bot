@@ -43,6 +43,8 @@ class Settings(BaseSettings):
     LLM_MAX_RETRIES: int = 2
     PRIMARY_LLM_PROVIDER: str = "groq"
     GROQ_API_KEY: str | None = None
+    STAFF_API_KEY: str | None = None
+
     # Pydantic settings configuration
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / "backend" / ".env",

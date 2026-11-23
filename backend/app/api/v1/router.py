@@ -1,5 +1,6 @@
 #APIRouter lets us organize endpoints into separate files and register them with the main application. 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from app.core.security import verify_staff_key
 
 common = "/api/v1"
 health_router = APIRouter( prefix=f"{common}/health", tags=["Health"] )
@@ -7,3 +8,4 @@ session_router = APIRouter( prefix=f"{common}/sessions", tags=["Sessions"] )
 chat_router = APIRouter( prefix=f"{common}/chat", tags=["Chat"] )
 cart_router = APIRouter( prefix=f"{common}/cart", tags=["Cart"] )
 order_router = APIRouter( prefix=f"{common}/orders", tags=["Orders"] )
+staff_router = APIRouter( prefix=f"{common}/staff", tags=["Staff"], dependencies=[Depends(verify_staff_key)] )
