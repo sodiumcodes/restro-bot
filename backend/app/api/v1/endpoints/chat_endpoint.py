@@ -15,6 +15,8 @@ from langchain_core.messages import HumanMessage
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.api.v1.router import chat_router as router
+from app.core.guardrails import validate_input, validate_output
+from app.core.rate_limit import chat_limiter
 from app.database.connection import get_db
 from app.database.models.order import Order
 from app.schemas.chat_schema import ChatRequest, ChatResponse
@@ -34,13 +36,21 @@ async def chat(
 ) -> ChatResponse:
     """
     Process a customer message through the LangGraph workflow.
-
     The customer's message is persisted before graph execution.
     The assistant's response is persisted only after successful
     generation.
     """
-
+    
     session_id: UUID = payload.session_id
+    # Apply rate limiting per client IP
+    chat_limiter.check(request)
+
+    # Validate input guardrails before database persistence or graph execution
+    is_valid, refusal_or_error = validate_input(payload.message)
+    if not is_valid:
+        if "exceeds" in refusal_or_error or "empty" in refusal_or_error:
+            raise HTTPException(status_code=400, detail=refusal_or_error)
+        return ChatResponse(session_id=session_id, response=refusal_or_error)
 
     # Step 1: Validate the customer session.
     chat_session = get_chat_session(
@@ -128,6 +138,9 @@ async def chat(
             raise RuntimeError(
                 "LangGraph did not return a valid response."
             )
+
+        # Apply output guardrails before persistence and return
+        response_text = validate_output(response_text)
 
         # Step 9: Persist the assistant's response.
         save_chat_message(
