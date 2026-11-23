@@ -20,7 +20,6 @@ class CartItemAdd(BaseModel):
             return cleaned if cleaned else None
         return value
 
-
 class CartItemUpdate(BaseModel):
     """Schema to update an existing cart item's quantity or special request."""
     item_id: int = Field(gt=0)
@@ -37,12 +36,10 @@ class CartItemUpdate(BaseModel):
             return cleaned if cleaned else None
         return value
 
-
 class CartItemRemove(BaseModel):
     """Schema to explicitly remove an item from the cart."""
     item_id: int = Field(gt=0)
     expected_version: int = Field(ge=1)
-
 
 class CartLineResponse(BaseModel):
     """Snapshot of a single cart line with calculated totals."""
@@ -54,7 +51,6 @@ class CartLineResponse(BaseModel):
     unit_price: Decimal
     line_total: Decimal
     special_request: str | None = None
-
 
 class CartResponse(BaseModel):
     """Full cart response including optimistic concurrency version and totals."""
