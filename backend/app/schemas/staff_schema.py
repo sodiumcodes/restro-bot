@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class OrderStatusUpdate(BaseModel):
     """Schema for updating an order's lifecycle status."""
-    status: Literal["placed", "ready", "completed"]
+    status: Literal["placed", "preparing", "ready", "completed"]
 
 class ItemAvailabilityUpdate(BaseModel):
     """Schema for toggling a menu item's availability."""
