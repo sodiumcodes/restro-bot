@@ -16,7 +16,6 @@ from app.core.config import settings
 from app.llm.llm_router import get_llm
 from app.llm.graph import build_graph
 from app.llm.retrieval import MenuRetriever
-from backend.app.api.v1.endpoints import health_endpoint
 
 # --------------------------------------------------
 # Application lifespan
@@ -89,9 +88,10 @@ app.add_middleware(
 # --------------------------------------------------
 
 from app.api.v1 import router
-from backend.app.api.v1.endpoints import sessions_endpoint
+from app.api.v1.endpoints import health_endpoint, sessions_endpoint, chat_endpoint
 app.include_router(router.health_router)
 app.include_router(router.session_router)
+app.include_router(router.chat_router)
 
 # --------------------------------------------------
 # Root endpoint

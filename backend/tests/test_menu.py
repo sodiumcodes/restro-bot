@@ -1,80 +1,90 @@
+from datetime import datetime, timezone
 from decimal import Decimal
-from fastapi import Depends
-from sqlalchemy.orm import Session
-from app.database.connection import get_db
-from app.database.connection import SessionLocal
-from app.services.menu_service import (
-    create_menu_item,
-    get_menu_item,
-    get_all_menu_items,
-    update_menu_item,
-    soft_delete_menu_item,
-)
-from app.api.v1.router import test_router as router
+from unittest.mock import MagicMock
+import pytest
+from sqlalchemy.exc import IntegrityError
+from app.database.models import MenuItem
+from app.services import menu_service
 
-# crud ops
-def main(db: Session = Depends(get_db)) :
-    test_item = None
+# --------------------------------------------------
+# create_menu_item tests
+# --------------------------------------------------
 
-    try:
-        # 1. CREATE
-        test_item = create_menu_item(
+def test_create_menu_item_adds_commits_and_refreshes_item():
+    db = MagicMock()
+
+    item = menu_service.create_menu_item(
+        db,
+        name="CRUD Test Sandwich",
+        description="Temporary item for testing",
+        price=Decimal("149.00"),
+        category="Sandwiches",
+        veg_type="veg",
+        spice_level="mild",
+        content_hash="temporary-test-hash",
+    )
+
+    assert isinstance(item, MenuItem)
+    assert item.name == "CRUD Test Sandwich"
+    assert item.description == "Temporary item for testing"
+    assert item.price == Decimal("149.00")
+    assert item.category == "Sandwiches"
+    assert item.veg_type == "veg"
+    assert item.spice_level == "mild"
+    assert item.content_hash == "temporary-test-hash"
+
+    db.add.assert_called_once_with(item)
+    db.commit.assert_called_once()
+    db.refresh.assert_called_once_with(item)
+
+
+def test_create_menu_item_rolls_back_on_integrity_error():
+    db = MagicMock()
+    db.commit.side_effect = IntegrityError(
+        "INSERT",
+        {},
+        Exception("duplicate active menu item"),
+    )
+
+    with pytest.raises(IntegrityError):
+        menu_service.create_menu_item(
             db,
-            name="CRUD Test Sandwich",
-            description="Temporary item for testing database operations",
+            name="Duplicate Sandwich",
+            description="Test description",
             price=Decimal("149.00"),
-            category="Sandwiches",
-            veg_type="veg",
-            spice_level="mild",
-            content_hash="temporary-test-hash",
+            content_hash="duplicate-hash",
         )
 
-        print("CREATED:", test_item.id, test_item.name)
+    db.add.assert_called_once()
+    db.rollback.assert_called_once()
+    db.refresh.assert_not_called()
 
-        # 2. READ
-        item = get_menu_item(db, test_item.id)
 
-        print("READ:", item.name, item.price)
+# --------------------------------------------------
+# get_menu_item tests
+# --------------------------------------------------
 
-        # 3. READ ALL
-        items = get_all_menu_items(db)
+def test_get_menu_item_returns_active_item():
+    db = MagicMock()
+    expected_item = MenuItem(
+        name="Paneer Sandwich",
+        description="Grilled paneer sandwich",
+        price=Decimal("149.00"),
+        content_hash="paneer-sandwich-hash",
+    )
+    db.scalar.return_value = expected_item
 
-        print("TOTAL ACTIVE MENU ITEMS:", len(items))
+    result = menu_service.get_menu_item(db, item_id=1)
 
-        # 4. UPDATE
-        updated_item = update_menu_item(
-            db,
-            test_item.id,
-            {"price": Decimal("159.00")},
-        )
+    assert result is expected_item
+    db.scalar.assert_called_once()
 
-        print("UPDATED PRICE:", updated_item.price)
 
-        # 5. SOFT DELETE
-        deleted = soft_delete_menu_item(db, test_item.id)
+def test_get_menu_item_returns_none_when_item_does_not_exist():
+    db = MagicMock()
+    db.scalar.return_value = None
 
-        print("SOFT DELETE:", deleted)
+    result = menu_service.get_menu_item(db, item_id=999)
 
-        # 6. VERIFY DELETION
-        deleted_item = get_menu_item(db, test_item.id)
-
-        print("ITEM AFTER DELETION:", deleted_item)
-
-        # 7. CLEAN UP TEST RECORD
-        if test_item:
-            db.delete(test_item)
-            db.commit()
-            print("TEST RECORD CLEANED UP")
-        return{
-            "message": "it worked as expected"
-        }
-
-    except Exception:
-        db.rollback()
-        raise
-
-    finally:
-        db.close()
-
-if __name__ == "__main__":
-    main()
+    assert result is None
+    db.scalar.assert_called_once()
