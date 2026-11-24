@@ -28,7 +28,7 @@ Next.js frontend  ──HTTP──▶  FastAPI backend ──▶ LangGraph (orde
 
 1. **Facts from the database, relevance from vectors.** Filter on structured fields first (`is_available`, `is_veg`, category), then rank by similarity.
 2. **The LLM never does arithmetic.** It chooses items and quantities; Python computes line totals and the final amount from DB prices.
-3. **The LLM never places orders.** Confirmation is a button calling `POST /api/orders`.
+3. **The LLM never places orders.** Confirmation is a button calling `POST /api/v1/orders`.
 4. **Empty means unknown.** Missing fields lead to "not specified, please check with staff."
 5. **Swappable providers.** Embeddings and LLMs sit behind small interfaces.
 
@@ -44,7 +44,7 @@ flowchart TD
     D --> E[build_cart]
     E --> F[show_summary]
     F -->|user asks for changes| B
-    F -->|Confirm button| G[[POST /api/orders]]
+    F -->|Confirm button| G[[POST /api/v1/orders]]
     D --> H[output_guardrails]
     F --> H
     Z --> H
@@ -53,7 +53,7 @@ flowchart TD
 
 **State (persisted per session):** `session_id`, `messages`, `intent`, `candidates`, `cart` (item_id, quantity, special_request), `order_type`, `table_number`, `contact`, `stage`.
 
-The Confirm step exits the graph: the frontend calls the order endpoint, which re-validates the cart against the database and writes the order. UI quantity/special-request changes use `PATCH /api/cart/{session_id}` directly; they do not need an LLM round trip.
+The Confirm step exits the graph: the frontend calls the order endpoint, which re-validates the cart against the database and writes the order. UI quantity/special-request changes use `PATCH /api/v1/cart/{session_id}` directly; they do not need an LLM round trip.
 
 ## 4. Retrieval
 
@@ -66,7 +66,7 @@ One embedding per item, built from a text such as "name. description. category. 
 ## 5. Cart mutation and concurrency
 
 1. The frontend reads the cart and its integer `version`.
-2. Quantity steppers and special-request fields call `PATCH /api/cart/{session_id}` with the desired line values and `expected_version`.
+2. Quantity steppers and special-request fields call `PATCH /api/v1/cart/{session_id}` with the desired line values and `expected_version`.
 3. In a database transaction, the backend validates the item and quantity, recalculates totals from database prices, and updates the cart only when the stored version still equals `expected_version`; it increments the version on success.
 4. If two updates race, only the first update against a given version succeeds. The other receives `409` with the latest cart/version and the frontend refreshes/reconciles rather than silently overwriting newer state.
 
