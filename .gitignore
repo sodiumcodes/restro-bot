@@ -104,3 +104,10 @@ tmp/
 #  Github
 # ==============================
 .github
+
+# ==============================
+# Frontend Deployemnt
+# ==============================
+
+frontend/.next
+frontend/node_modules
