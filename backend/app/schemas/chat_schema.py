@@ -1,20 +1,18 @@
+from decimal import Decimal
 from uuid import UUID
 from datetime import datetime
 from typing import Literal
-# BaseModel is used to create Pydantic models.
-# Field is used to define validation rules for fields.
-# field_validator is used to create custom validation logic.
 from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
     field_validator,
 )
+from app.schemas.cart_schema import CartResponse
 
 # Schema for incoming chat requests from the client.
 class ChatRequest(BaseModel):
     session_id: UUID
-
     # Message sent by the user.
     message: str = Field(
         min_length=1,
@@ -29,17 +27,26 @@ class ChatRequest(BaseModel):
             return value.strip()
         return value
 
+class ChatSuggestion(BaseModel):
+    """Structured menu item suggestion returned alongside assistant reply."""
+    item_id: int
+    name: str
+    price: Decimal
+    veg_type: str | None = None
+    description: str | None = None
+
 
 # Schema for the response returned by the backend to the client.
 class ChatResponse(BaseModel):
     session_id: UUID
     response: str
+    suggestions: list[ChatSuggestion] = Field(default_factory=list)
+    cart: CartResponse | None = None
 
 class ChatMessageResponse(BaseModel):
     """Schema representing one persisted conversation message."""
-
+    
     model_config = ConfigDict(from_attributes=True)
-
     id: int
     role: Literal["user", "assistant"]
     content: str

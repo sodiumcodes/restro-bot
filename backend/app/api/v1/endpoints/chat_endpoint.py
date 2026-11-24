@@ -19,7 +19,8 @@ from app.core.guardrails import validate_input, validate_output
 from app.core.rate_limit import chat_limiter
 from app.database.connection import get_db
 from app.database.models.order import Order
-from app.schemas.chat_schema import ChatRequest, ChatResponse
+from app.schemas.chat_schema import ChatRequest, ChatResponse, ChatSuggestion
+from app.services import cart_service
 from app.services.chat_service import get_chat_history, save_chat_message, to_langchain_messages
 from app.services.session_service import get_chat_session, update_session_activity
 
@@ -150,10 +151,33 @@ async def chat(
             content=response_text,
         )
 
-        # Step 10: Return the response.
+        # Step 10: Extract suggested items and current cart snapshot for the frontend.
+        raw_items = result.get("retrieved_items", []) or []
+        suggestions = [
+            ChatSuggestion(
+                item_id=item["id"],
+                name=item["name"],
+                price=item["price"],
+                veg_type=item.get("veg_type"),
+                description=item.get("description"),
+            )
+            for item in raw_items
+            if "id" in item and "name" in item
+        ]
+
+        # Retrieve current cart snapshot so frontend stays synchronized.
+        current_cart = None
+        try:
+            current_cart = cart_service.get_cart(db, session_id)
+        except Exception:
+            logger.warning("Could not attach cart snapshot for session %s", session_id)
+
+        # Step 11: Return enriched chat response.
         return ChatResponse(
             session_id=session_id,
             response=response_text,
+            suggestions=suggestions,
+            cart=current_cart,
         )
 
     except HTTPException:
