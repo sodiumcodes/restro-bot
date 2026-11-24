@@ -132,30 +132,96 @@ def soft_delete_menu_item(
     return True
 
 
+def normalize_optional_list(value) -> list[str]:
+    """
+    Normalize optional list fields such as ingredients and allergens.
+
+    Handles None, empty lists, empty dictionaries, and empty strings.
+    """
+
+    if value is None:
+        return []
+
+    if isinstance(value, dict):
+        if not value:
+            return []
+
+        raise ValueError(
+            "Expected a list, received a non-empty dictionary."
+        )
+
+    if isinstance(value, str):
+        value = value.strip()
+
+        if value in {"", "{}", "[]"}:
+            return []
+
+        # Support comma-separated strings.
+        return [
+            part.strip()
+            for part in value.split(",")
+            if part.strip()
+        ]
+
+    if isinstance(value, (list, tuple, set)):
+        return [
+            str(item).strip()
+            for item in value
+            if item is not None and str(item).strip()
+        ]
+
+    raise ValueError(
+        f"Unsupported list field type: {type(value).__name__}"
+    )
+
+
 def build_embedding_text(item: dict) -> str:
     """
     Build the semantic text representation of a menu item.
 
-    Keep this function consistent between ingestion
+    Missing optional values are represented as 'Not specified'.
+    This function must remain consistent between menu ingestion
     and embedding generation.
     """
 
-    ingredients = ", ".join(item.get("ingredients") or [])
-    allergens = ", ".join(item.get("allergens") or [])
+    name = str(item.get("name") or "").strip()
+    description = str(item.get("description") or "").strip()
+
+    if not name:
+        raise ValueError("Menu item name cannot be empty.")
+
+    if not description:
+        raise ValueError(
+            f"Description is missing for menu item: {name}"
+        )
+
+    category = item.get("category") or "Not specified"
+    veg_type = item.get("veg_type") or "Not specified"
+    spice_level = item.get("spice_level") or "Not specified"
+
+    ingredients = normalize_optional_list(
+        item.get("ingredients")
+    )
+
+    allergens = normalize_optional_list(
+        item.get("allergens")
+    )
 
     return (
-        f"Name: {item['name']}\n"
-        f"Description: {item['description']}\n"
-        f"Category: {item['category'] or 'Not specified'}\n"
-        f"Dietary type: {item['veg_type'] or 'Not specified'}\n"
-        f"Spice level: {item['spice_level'] or 'Not specified'}\n"
-        f"Ingredients: {ingredients}\n"
-        f"Allergens: {allergens}"
+        f"Name: {name}\n"
+        f"Description: {description}\n"
+        f"Category: {category}\n"
+        f"Dietary type: {veg_type}\n"
+        f"Spice level: {spice_level}\n"
+        f"Ingredients: {', '.join(ingredients) or 'Not specified'}\n"
+        f"Allergens: {', '.join(allergens) or 'Not specified'}"
     )
 
 
 def calculate_content_hash(item: dict) -> str:
-    """Generate a stable hash of the semantic menu content."""
+    """
+    Generate a stable SHA-256 hash of the semantic menu content.
+    """
 
     content = build_embedding_text(item)
 

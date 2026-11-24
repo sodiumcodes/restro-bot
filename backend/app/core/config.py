@@ -29,8 +29,21 @@ class Settings(BaseSettings):
     # Data retention
     RETENTION_DAYS: int = 30
 
-    def __init__(self, **values):
-        super().__init__(**values)
+    # Embedding configuration
+    EMBEDDING_PROVIDER: str 
+    EMBEDDING_MODEL: str 
+    EMBEDDING_DIM: int = 2048
+    EMBEDDING_BATCH_SIZE: int = 10
+    OPENROUTER_API_KEY: str
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+
+    # LLM router configuration
+    LLM_MODELS_CONFIG: str = "app/config/llm_models.yaml"
+    LLM_TEMPERATURE: float = 0.0
+    LLM_MAX_RETRIES: int = 2
+    PRIMARY_LLM_PROVIDER: str = "groq"
+    GROQ_API_KEY: str | None = None
+    STAFF_API_KEY: str | None = None
 
     # Pydantic settings configuration
     model_config = SettingsConfigDict(

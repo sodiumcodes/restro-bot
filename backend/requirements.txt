@@ -14,9 +14,9 @@ python-dotenv
 # LLM and orchestration
 # -------------------------
 langgraph
+openai
 langchain-core
 langchain-community
-
 langchain-groq
 langchain-openai
 
