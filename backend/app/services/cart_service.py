@@ -1,7 +1,9 @@
+import copy
 from decimal import Decimal
 from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 from app.core.config import settings
 from app.database.models import Cart, ChatSession, MenuItem, Order
 from app.services.session_service import SessionNotFoundError
@@ -234,7 +236,8 @@ def _mutate_cart(
     )
 
     # Add a newly initialized cart to the current database session.
-    if cart.session_id not in db:
+    # Check the mapped Cart model instance, not cart.session_id which causes UnmappedInstanceError.
+    if cart not in db:
         db.add(cart)
         db.flush()
 
@@ -250,11 +253,12 @@ def _mutate_cart(
             )
         )
 
-    # Apply the requested operation to a copy of the existing cart lines.
-    new_lines = mutate_fn(list(cart.state.get("lines", [])))
+    # Deepcopy lines so mutations do not mutate in-place before dirty check
+    new_lines = mutate_fn(copy.deepcopy(cart.state.get("lines", [])))
 
-    # Save the updated cart state and increment its version.
+    # Save the updated cart state and explicitly flag JSONB column as modified
     cart.state = {"lines": new_lines}
+    flag_modified(cart, "state")
     cart.version += 1
 
     # Persist the changes to the database.

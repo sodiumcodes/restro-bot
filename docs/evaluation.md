@@ -72,3 +72,26 @@ Goal: catch regressions in retrieval, ordering correctness, safety, and guardrai
 - Verify the scheduled retention job deletes chat messages and clears/anonymizes contact details older than 30 days.
 - Benchmark HNSW against exact vector search using the representative menu; retain HNSW only if it provides a measurable benefit without unacceptable retrieval-quality loss.
 - Confirm the confirmation screen mentions the staff-provided bill and QR.
+
+## 6. Running Tests
+
+### Unit Tests
+Run standard unit tests (fast, in-memory mocks):
+```bash
+cd backend
+python -m pytest -m "not e2e"
+```
+
+### End-to-End & Integration Tests
+Run end-to-end customer flow, concurrency, conversation, and security tests against the test PostgreSQL database:
+```bash
+cd backend
+python -m pytest -m e2e
+```
+
+### Full Test Suite
+Run the entire test suite (all unit and e2e integration tests):
+```bash
+cd backend
+python -m pytest
+```
